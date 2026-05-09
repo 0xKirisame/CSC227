@@ -19,39 +19,43 @@ public class ThreadManager {
         this.allJobsParsed = false;
     }
 
+    // add process to job queue and notify thread2
     public synchronized void addJobToQueue(PCB process) {
-        jobQueue.offer(process); //offer is better than add because it outputs false if element not added[better for exception (M): contact if you don't understand
-        notifyAll(); 
+        jobQueue.offer(process); // offer is safer than add, returns false instead of exception
+        notifyAll();
     }
 
-    public synchronized void setAllJobsParsed() { // if all allocated jobs are done set boolean true (M)
+    // called by thread1 when its done reading all jobs from file
+    public synchronized void setAllJobsParsed() {
         this.allJobsParsed = true;
         notifyAll();
     }
 
+    // try to move next job from job queue to ready queue
+    // waits if no jobs available or not enough memory
     public synchronized void loadNextJobToReadyQueue() throws InterruptedException {
-    	
+
         while (jobQueue.isEmpty() && !allJobsParsed) {
-            wait();
+            wait(); // wait until thread1 adds a job or finishes
         }
 
         if (!jobQueue.isEmpty()) {
-            PCB nextJob = jobQueue.peek(); 
+            PCB nextJob = jobQueue.peek();
 
             if (availableMemory >= nextJob.getMemoryRequired()) {
-                jobQueue.poll(); 
+                jobQueue.poll();
                 availableMemory -= nextJob.getMemoryRequired();
                 nextJob.setState("READY");
                 readyQueue.add(nextJob);
-                notifyAll(); 
-                
+                notifyAll();
             } else {
-                wait(); 
+                wait(); // not enough memory, wait for some to be freed
             }
         }
     }
 
-    public synchronized boolean hasMoreJobsToLoad() { 
+    // returns true if there are still jobs to load (either in queue or thread1 still reading)
+    public synchronized boolean hasMoreJobsToLoad() {
         return !jobQueue.isEmpty() || !allJobsParsed;
     }
 
@@ -59,11 +63,13 @@ public class ThreadManager {
         return readyQueue;
     }
     
+    // free memory when a process finishes, notify thread2 so it can try loading more
     public synchronized void freeMemory(int memoryFreed) {
         availableMemory += memoryFreed;
-        notifyAll(); 
+        notifyAll();
     }
 
+    // check if everything is done
     public synchronized boolean isSimulationComplete() {
         return allJobsParsed && jobQueue.isEmpty() && readyQueue.isEmpty();
     }

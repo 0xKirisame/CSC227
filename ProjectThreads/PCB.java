@@ -11,9 +11,10 @@ public class PCB {
     private int arrivalOrder; 
     private int timeInReadyQueue; 
     private boolean sufferedStarvation; 
-    private int startTime; 
-    private int terminationTime; 
+    private int startTime; // when the process first gets CPU
+    private int terminationTime; // when it finishes
 
+    // constructor to initialize all fields
     public PCB(int processID, int burstTime, int priority, int memoryRequired, int arrivalOrder) {
         this.processID = processID;
         this.burstTime = burstTime;
@@ -27,7 +28,7 @@ public class PCB {
         this.turnaroundTime = 0;
         this.timeInReadyQueue = 0;
         this.sufferedStarvation = false;
-        this.startTime = -1; // -1 => process is didn't start (M)
+        this.startTime = -1; // -1 means it hasnt started yet
     }
 
     public int getProcessID() { return processID; }    
@@ -39,10 +40,11 @@ public class PCB {
     public void decrementRemainingBurstTime() { this.remainingBurstTime--; }
     public int getPriority() { return priority; }
     public void setPriority(int priority) { this.priority = priority; }
-    public void ageProcess() { 
-        if (this.priority > 1) { 
-            this.priority--; 
-        } 
+    // decrease priority number by 1 (makes it higher priority) but dont go below 1
+    public void ageProcess() {
+        if (this.priority > 1) {
+            this.priority--;
+        }
     }
     
     public int getMemoryRequired() { return memoryRequired; }
